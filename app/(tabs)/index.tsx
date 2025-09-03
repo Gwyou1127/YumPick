@@ -1,5 +1,5 @@
-import { FoodCarousel } from "@/components/FoodCarousel";
+import { TinderCarousel } from "@/components/TinderCarousel";
 
 export default function Home() {
-  return <FoodCarousel />;
+  return <TinderCarousel />;
 }
