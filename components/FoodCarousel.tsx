@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import Carousel from 'react-native-reanimated-carousel';
 import foodData from '../data.json';
+import { OptimizedImage } from './OptimizedImage';
+import { imageCache } from '../utils/imageCache';
 
 const { width: screenWidth } = Dimensions.get('window');
 const itemWidth = screenWidth * 0.9;
@@ -41,6 +43,10 @@ export const FoodCarousel: React.FC = () => {
     // 앱이 실행될 때마다 랜덤으로 섞기
     const shuffledFoods = shuffleArray(foodData.foods);
     setEntries(shuffledFoods);
+    
+    // 첫 10개 이미지 프리로드
+    const firstBatch = shuffledFoods.slice(0, 10).map(item => item.url);
+    imageCache.preloadImages(firstBatch);
   }, []); // 빈 의존성 배열로 앱 실행 시에만 실행
 
   // 슬라이드할 때마다 새로운 랜덤 이미지 추가
@@ -50,16 +56,28 @@ export const FoodCarousel: React.FC = () => {
       const newRandomFoods = shuffleArray(foodData.foods).slice(0, 10);
       
       setEntries(prev => [...prev, ...newRandomFoods]);
+      
+      // 새로 추가된 이미지들 프리로드
+      const newUrls = newRandomFoods.map(item => item.url);
+      imageCache.preloadImages(newUrls);
+    }
+    
+    // 다음 5개 이미지 미리 프리로드
+    if (index < entries.length - 5) {
+      const nextBatch = entries.slice(index + 1, index + 6).map(item => item.url);
+      imageCache.preloadImages(nextBatch);
     }
   };
 
   const renderItem = ({ item, index }: { item: FoodItem; index: number }) => {
     return (
       <View style={styles.slide}>
-        <Image 
+        <OptimizedImage 
           source={{ uri: item.url }} 
           style={styles.foodImage}
           resizeMode="cover"
+          showLoadingIndicator={true}
+          placeholderColor="#f8f8f8"
         />
       </View>
     );

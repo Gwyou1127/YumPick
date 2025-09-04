@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   Text,
-  Image,
   StyleSheet,
   Dimensions,
   Animated,
@@ -12,6 +11,8 @@ import {
   PanResponderGestureState,
 } from 'react-native';
 import foodData from '../data.json';
+import { OptimizedImage } from './OptimizedImage';
+import { imageCache } from '../utils/imageCache';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const CARD_WIDTH = screenWidth * 0.85;
@@ -221,7 +222,13 @@ const Card: React.FC<CardProps> = ({ item, index, isTop, onSwipe }) => {
       style={[styles.card, cardStyle, { zIndex: 100 - index }]}
       {...panResponder.panHandlers}
     >
-      <Image source={{ uri: item.url }} style={styles.cardImage} />
+      <OptimizedImage 
+        source={{ uri: item.url }} 
+        style={styles.cardImage}
+        resizeMode="cover"
+        showLoadingIndicator={true}
+        placeholderColor="#f8f8f8"
+      />
     </Animated.View>
   );
 };
@@ -237,6 +244,10 @@ export const TinderCarousel: React.FC = () => {
     // 초기 카드 데이터 설정
     const shuffledFoods = shuffleArray(foodData.foods);
     setCards(shuffledFoods);
+    
+    // 첫 5개 이미지 프리로드
+    const firstBatch = shuffledFoods.slice(0, 5).map(item => item.url);
+    imageCache.preloadImages(firstBatch);
   }, []);
 
   const shuffleArray = (array: FoodItem[]): FoodItem[] => {
@@ -282,6 +293,16 @@ export const TinderCarousel: React.FC = () => {
       if (newIndex >= cards.length - 3) {
         const newCards = shuffleArray(foodData.foods).slice(0, 5);
         setCards(prevCards => [...prevCards, ...newCards]);
+        
+        // 새로 추가된 카드들의 이미지 프리로드
+        const newUrls = newCards.map(item => item.url);
+        imageCache.preloadImages(newUrls);
+      }
+      
+      // 다음 3개 이미지 미리 프리로드
+      if (newIndex < cards.length - 3) {
+        const nextBatch = cards.slice(newIndex + 1, newIndex + 4).map(item => item.url);
+        imageCache.preloadImages(nextBatch);
       }
       
       return newIndex;
