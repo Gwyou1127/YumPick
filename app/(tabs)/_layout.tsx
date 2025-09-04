@@ -9,5 +9,10 @@ import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
 export default function TabLayout() {
-  return <Stack screenOptions={{ headerShown: false }}></Stack>;
+  const colorScheme = useColorScheme();
+
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+    </Stack>
+  );
 }

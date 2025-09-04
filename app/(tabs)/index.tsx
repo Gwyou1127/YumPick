@@ -1,5 +1,5 @@
-import { TinderCarousel } from "@/components/TinderCarousel";
+import { MainScreen } from "@/components/MainScreen";
 
 export default function Home() {
-  return <TinderCarousel />;
+  return <MainScreen />;
 }

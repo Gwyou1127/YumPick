@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Image, View, ActivityIndicator, StyleSheet, ImageStyle, Text } from 'react-native';
+import { Image, View, ActivityIndicator, StyleSheet, ImageStyle, Text, Platform } from 'react-native';
 import { imageCache } from '../utils/imageCache';
 import { optimizeImageUrl } from '../utils/optimizeImageUrl';
 import { getFallbackImage } from '../utils/fallbackImages';
@@ -23,6 +23,7 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
   const [hasError, setHasError] = useState(false);
   const [isCached, setIsCached] = useState(false);
   const [currentUri, setCurrentUri] = useState(source.uri);
+  const [imageLoaded, setImageLoaded] = useState(false);
   
   // 이미지 URL 최적화 (안전한 방식)
   const optimizedUri = currentUri;
@@ -34,6 +35,7 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
       
       if (cached) {
         setIsLoading(false);
+        setImageLoaded(true);
       }
     };
 
@@ -45,6 +47,7 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
     setCurrentUri(source.uri);
     setIsLoading(true);
     setHasError(false);
+    setImageLoaded(false);
   }, [source.uri]);
 
   const handleLoadStart = () => {
@@ -54,6 +57,7 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
 
   const handleLoadEnd = () => {
     setIsLoading(false);
+    setImageLoaded(true);
   };
 
   const handleError = (error: any) => {
@@ -66,10 +70,12 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
       setCurrentUri(fallbackUri);
       setIsLoading(true);
       setHasError(false);
+      setImageLoaded(false);
     } else {
       // fallback도 실패한 경우
       setIsLoading(false);
       setHasError(true);
+      setImageLoaded(false);
     }
   };
 
@@ -82,13 +88,18 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
         onLoadStart={handleLoadStart}
         onLoadEnd={handleLoadEnd}
         onError={handleError}
-        // 이미지 로딩 최적화 옵션들
-        fadeDuration={200}
-        progressiveRenderingEnabled={true}
-        removeClippedSubviews={true}
+        // iOS 특화 이미지 로딩 최적화 옵션들
+        fadeDuration={Platform.OS === 'ios' ? 0 : 200}
+        progressiveRenderingEnabled={Platform.OS === 'ios' ? false : true}
+        removeClippedSubviews={Platform.OS === 'ios' ? false : true}
+        // iOS에서 로딩 상태 개선
+        onLoad={() => {
+          setIsLoading(false);
+          setImageLoaded(true);
+        }}
       />
       
-      {isLoading && showLoadingIndicator && (
+      {isLoading && showLoadingIndicator && !imageLoaded && (
         <View style={styles.loadingContainer}>
           <ActivityIndicator 
             size="small" 
