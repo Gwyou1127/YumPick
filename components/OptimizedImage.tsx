@@ -64,15 +64,15 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
   };
 
   const handleError = (error: any) => {
-    console.warn('이미지 로드 실패:', currentUri, error);
+    // console.warn('이미지 로드 실패:', currentUri, error);
     
     // iOS에서 특정 에러 타입 확인
     const errorMessage = error?.nativeEvent?.error || error?.error || 'Unknown error';
-    console.log('에러 세부사항:', errorMessage);
+    // console.log('에러 세부사항:', errorMessage);
     
     // 재시도 로직 (네트워크 문제일 수 있음)
     if (retryCount < maxRetries && (currentUri === source.uri || currentUri.includes('?retry='))) {
-      console.log(`이미지 로드 재시도 (${retryCount + 1}/${maxRetries}):`, currentUri);
+      // console.log(`이미지 로드 재시도 (${retryCount + 1}/${maxRetries}):`, currentUri);
       setRetryCount(prev => prev + 1);
       setIsLoading(true);
       setHasError(false);
@@ -84,7 +84,7 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
     }
     
     // 재시도 후에도 실패한 경우 에러 표시
-    console.log('이미지 로드 최종 실패:', currentUri);
+    // console.log('이미지 로드 최종 실패:', currentUri);
     setIsLoading(false);
     setHasError(true);
     setImageLoaded(false);
