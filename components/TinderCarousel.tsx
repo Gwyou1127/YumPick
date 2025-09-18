@@ -23,7 +23,7 @@ const VERTICAL_SWIPE_THRESHOLD = 80;
 interface FoodItem {
   id: number;
   name: string;
-  url: string;
+  image_url: string;
 }
 
 interface CardProps {
@@ -231,7 +231,7 @@ const Card: React.FC<CardProps> = ({ item, index, isTop, onSwipe }) => {
       {...panResponder.panHandlers}
     >
       <OptimizedImage 
-        source={{ uri: item.url }} 
+        source={{ uri: item.image_url }} 
         style={styles.cardImage}
         resizeMode="cover"
         showLoadingIndicator={true}
@@ -253,6 +253,12 @@ export const TinderCarousel: React.FC = () => {
   const [isTransitioning, setIsTransitioning] = useState(false);
 
   useEffect(() => {
+    // 데이터 유효성 검사
+    if (!foodData || !foodData.foods || !Array.isArray(foodData.foods)) {
+      console.error('음식 데이터가 올바르지 않습니다:', foodData);
+      return;
+    }
+
     // 초기 카드 데이터 설정 - 매번 새로운 랜덤 순서
     const shuffledFoods = shuffleArray(foodData.foods);
     setCards(shuffledFoods);
@@ -261,13 +267,20 @@ export const TinderCarousel: React.FC = () => {
     setDislikedCards([]);
     
     // 첫 5개 이미지 프리로드
-    const firstBatch = shuffledFoods.slice(0, 5).map(item => item.url);
-    imageCache.preloadImages(firstBatch);
+    const firstBatch = shuffledFoods.slice(0, 5).map(item => item.image_url).filter(Boolean);
+    if (firstBatch.length > 0) {
+      imageCache.preloadImages(firstBatch);
+    }
     
     console.log('새로운 랜덤 순서로 카드 로드:', shuffledFoods.slice(0, 5).map(item => item.name));
   }, []);
 
   const shuffleArray = (array: FoodItem[]): FoodItem[] => {
+    if (!Array.isArray(array) || array.length === 0) {
+      console.warn('유효하지 않은 배열:', array);
+      return [];
+    }
+
     const shuffled = [...array];
     
     // Fisher-Yates 셔플 알고리즘 사용
@@ -290,6 +303,12 @@ export const TinderCarousel: React.FC = () => {
   const handleSwipe = useCallback((direction: 'left' | 'right' | 'up' | 'down') => {
     const currentCard = cards[currentIndex];
     
+    // 안전성 검사 추가
+    if (!currentCard) {
+      console.warn('현재 카드가 존재하지 않습니다:', currentIndex, cards.length);
+      return;
+    }
+    
     if (direction === 'up') {
       setLikedCards(prev => [...prev, currentCard]);
     } else if (direction === 'down') {
@@ -309,14 +328,18 @@ export const TinderCarousel: React.FC = () => {
         setCards(prevCards => [...prevCards, ...newCards]);
         
         // 새로 추가된 카드들의 이미지 프리로드
-        const newUrls = newCards.map(item => item.url);
-        imageCache.preloadImages(newUrls);
+        const newUrls = newCards.map(item => item.image_url).filter(Boolean);
+        if (newUrls.length > 0) {
+          imageCache.preloadImages(newUrls);
+        }
       }
       
       // 다음 3개 이미지 미리 프리로드
       if (newIndex < cards.length - 3) {
-        const nextBatch = cards.slice(newIndex + 1, newIndex + 4).map(item => item.url);
-        imageCache.preloadImages(nextBatch);
+        const nextBatch = cards.slice(newIndex + 1, newIndex + 4).map(item => item.image_url).filter(Boolean);
+        if (nextBatch.length > 0) {
+          imageCache.preloadImages(nextBatch);
+        }
       }
       
       return newIndex;
@@ -350,8 +373,10 @@ export const TinderCarousel: React.FC = () => {
     setIsTransitioning(false);
     
     // 새로운 첫 5개 이미지 프리로드
-    const firstBatch = shuffledFoods.slice(0, 5).map(item => item.url);
-    imageCache.preloadImages(firstBatch);
+    const firstBatch = shuffledFoods.slice(0, 5).map(item => item.image_url).filter(Boolean);
+    if (firstBatch.length > 0) {
+      imageCache.preloadImages(firstBatch);
+    }
     
     console.log('카드 리셋 - 새로운 랜덤 순서:', shuffledFoods.slice(0, 5).map(item => item.name));
   }, []);

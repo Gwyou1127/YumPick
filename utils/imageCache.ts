@@ -15,6 +15,12 @@ class ImageCache {
   // 이미지 프리로드
   preloadImage(uri: string): Promise<boolean> {
     return new Promise((resolve) => {
+      if (!uri || typeof uri !== 'string') {
+        console.warn('잘못된 URI:', uri);
+        resolve(false);
+        return;
+      }
+
       if (this.cache.has(uri)) {
         resolve(true);
         return;
@@ -30,7 +36,8 @@ class ImageCache {
           this.cleanupCache();
           resolve(true);
         })
-        .catch(() => {
+        .catch((error) => {
+          console.warn('이미지 프리로드 실패:', uri, error);
           resolve(false);
         });
     });
@@ -38,9 +45,20 @@ class ImageCache {
 
   // 여러 이미지 프리로드
   async preloadImages(uris: string[]): Promise<void> {
+    if (!Array.isArray(uris) || uris.length === 0) {
+      console.warn('잘못된 URI 배열:', uris);
+      return;
+    }
+
+    const validUris = uris.filter(uri => uri && typeof uri === 'string');
+    if (validUris.length === 0) {
+      console.warn('유효한 URI가 없습니다:', uris);
+      return;
+    }
+
     const batchSize = 5; // 한 번에 5개씩 처리
-    for (let i = 0; i < uris.length; i += batchSize) {
-      const batch = uris.slice(i, i + batchSize);
+    for (let i = 0; i < validUris.length; i += batchSize) {
+      const batch = validUris.slice(i, i + batchSize);
       await Promise.all(batch.map(uri => this.preloadImage(uri)));
     }
   }

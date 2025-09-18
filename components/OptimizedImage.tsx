@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Image, View, ActivityIndicator, StyleSheet, ImageStyle, Text, Platform } from 'react-native';
 import { imageCache } from '../utils/imageCache';
-import { optimizeImageUrl } from '../utils/optimizeImageUrl';
-import { getFallbackImage } from '../utils/fallbackImages';
 
 interface OptimizedImageProps {
   source: { uri: string };
@@ -27,6 +25,10 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
   
   // 이미지 URL 최적화 (안전한 방식)
   const optimizedUri = currentUri;
+  
+  // iOS에서 네트워크 상태 확인을 위한 추가 로직
+  const [retryCount, setRetryCount] = useState(0);
+  const maxRetries = 2;
 
   useEffect(() => {
     const checkCache = async () => {
@@ -48,6 +50,7 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
     setIsLoading(true);
     setHasError(false);
     setImageLoaded(false);
+    setRetryCount(0); // 새로운 이미지일 때 재시도 카운트 리셋
   }, [source.uri]);
 
   const handleLoadStart = () => {
@@ -63,20 +66,29 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
   const handleError = (error: any) => {
     console.warn('이미지 로드 실패:', currentUri, error);
     
-    // fallback 이미지가 아직 시도되지 않았다면 fallback으로 전환
-    if (currentUri === source.uri) {
-      const fallbackUri = getFallbackImage(source.uri);
-      console.log('Fallback 이미지로 전환:', fallbackUri);
-      setCurrentUri(fallbackUri);
+    // iOS에서 특정 에러 타입 확인
+    const errorMessage = error?.nativeEvent?.error || error?.error || 'Unknown error';
+    console.log('에러 세부사항:', errorMessage);
+    
+    // 재시도 로직 (네트워크 문제일 수 있음)
+    if (retryCount < maxRetries && (currentUri === source.uri || currentUri.includes('?retry='))) {
+      console.log(`이미지 로드 재시도 (${retryCount + 1}/${maxRetries}):`, currentUri);
+      setRetryCount(prev => prev + 1);
       setIsLoading(true);
       setHasError(false);
-      setImageLoaded(false);
-    } else {
-      // fallback도 실패한 경우
-      setIsLoading(false);
-      setHasError(true);
-      setImageLoaded(false);
+      // 잠시 후 재시도
+      setTimeout(() => {
+        setCurrentUri(source.uri + `?retry=${retryCount + 1}`);
+      }, 1000);
+      return;
     }
+    
+    // 재시도 후에도 실패한 경우 에러 표시
+    console.log('이미지 로드 최종 실패:', currentUri);
+    setIsLoading(false);
+    setHasError(true);
+    setImageLoaded(false);
+    setRetryCount(0);
   };
 
   return (
@@ -90,12 +102,12 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
         onError={handleError}
         // iOS 특화 이미지 로딩 최적화 옵션들
         fadeDuration={Platform.OS === 'ios' ? 0 : 200}
-        progressiveRenderingEnabled={Platform.OS === 'ios' ? false : true}
-        removeClippedSubviews={Platform.OS === 'ios' ? false : true}
         // iOS에서 로딩 상태 개선
         onLoad={() => {
           setIsLoading(false);
           setImageLoaded(true);
+          // 캐시에 성공적으로 로드된 이미지 저장
+          imageCache.preloadImage(optimizedUri);
         }}
       />
       
@@ -112,9 +124,13 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
       {hasError && (
         <View style={[styles.errorContainer, { backgroundColor: placeholderColor }]}>
           <View style={styles.errorIcon}>
-            <Text style={styles.errorText}>📷</Text>
+            <Text style={styles.errorText}>⚠️</Text>
           </View>
-          <Text style={styles.errorMessage}>이미지를 불러올 수 없습니다</Text>
+          <Text style={styles.errorTitle}>이미지 로드 실패</Text>
+          <Text style={styles.errorMessage}>네트워크 연결을 확인하거나{'\n'}잠시 후 다시 시도해주세요</Text>
+          <View style={styles.errorDetails}>
+            <Text style={styles.errorUrl}>URL: {source.uri.length > 50 ? source.uri.substring(0, 50) + '...' : source.uri}</Text>
+          </View>
         </View>
       )}
     </View>
@@ -152,18 +168,42 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
+    borderWidth: 2,
+    borderColor: '#ff6b6b',
+    borderStyle: 'dashed',
+    borderRadius: 8,
   },
   errorIcon: {
-    marginBottom: 8,
+    marginBottom: 12,
   },
   errorText: {
-    fontSize: 32,
-    opacity: 0.6,
+    fontSize: 36,
+    opacity: 0.8,
+  },
+  errorTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#ff6b6b',
+    textAlign: 'center',
+    marginBottom: 8,
   },
   errorMessage: {
     fontSize: 12,
+    color: '#666',
+    textAlign: 'center',
+    lineHeight: 16,
+    marginBottom: 12,
+  },
+  errorDetails: {
+    backgroundColor: 'rgba(255, 107, 107, 0.1)',
+    padding: 8,
+    borderRadius: 4,
+    maxWidth: '100%',
+  },
+  errorUrl: {
+    fontSize: 10,
     color: '#999',
     textAlign: 'center',
-    opacity: 0.8,
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
   },
 });

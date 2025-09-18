@@ -11,7 +11,7 @@ const itemWidth = screenWidth * 0.9;
 interface FoodItem {
   id: string;
   name: string;
-  url: string;
+  image_url: string;
 }
 
 export const FoodCarousel: React.FC = () => {
@@ -19,6 +19,11 @@ export const FoodCarousel: React.FC = () => {
 
   // 배열 함수만을 사용한 랜덤 셔플 함수
   const shuffleArray = (array: FoodItem[]): FoodItem[] => {
+    if (!Array.isArray(array) || array.length === 0) {
+      console.warn('유효하지 않은 배열:', array);
+      return [];
+    }
+
     const shuffled = [...array];
     const now = new Date();
     const seed = now.getTime() % shuffled.length;
@@ -40,13 +45,21 @@ export const FoodCarousel: React.FC = () => {
   };
 
   useEffect(() => {
+    // 데이터 유효성 검사
+    if (!foodData || !foodData.foods || !Array.isArray(foodData.foods)) {
+      console.error('음식 데이터가 올바르지 않습니다:', foodData);
+      return;
+    }
+
     // 앱이 실행될 때마다 랜덤으로 섞기
     const shuffledFoods = shuffleArray(foodData.foods);
     setEntries(shuffledFoods);
     
     // 첫 10개 이미지 프리로드
-    const firstBatch = shuffledFoods.slice(0, 10).map(item => item.url);
-    imageCache.preloadImages(firstBatch);
+    const firstBatch = shuffledFoods.slice(0, 10).map(item => item.image_url).filter(Boolean);
+    if (firstBatch.length > 0) {
+      imageCache.preloadImages(firstBatch);
+    }
   }, []); // 빈 의존성 배열로 앱 실행 시에만 실행
 
   // 슬라이드할 때마다 새로운 랜덤 이미지 추가
@@ -58,14 +71,18 @@ export const FoodCarousel: React.FC = () => {
       setEntries(prev => [...prev, ...newRandomFoods]);
       
       // 새로 추가된 이미지들 프리로드
-      const newUrls = newRandomFoods.map(item => item.url);
-      imageCache.preloadImages(newUrls);
+      const newUrls = newRandomFoods.map(item => item.image_url).filter(Boolean);
+      if (newUrls.length > 0) {
+        imageCache.preloadImages(newUrls);
+      }
     }
     
     // 다음 5개 이미지 미리 프리로드
     if (index < entries.length - 5) {
-      const nextBatch = entries.slice(index + 1, index + 6).map(item => item.url);
-      imageCache.preloadImages(nextBatch);
+      const nextBatch = entries.slice(index + 1, index + 6).map(item => item.image_url).filter(Boolean);
+      if (nextBatch.length > 0) {
+        imageCache.preloadImages(nextBatch);
+      }
     }
   };
 
@@ -73,7 +90,7 @@ export const FoodCarousel: React.FC = () => {
     return (
       <View style={styles.slide}>
         <OptimizedImage 
-          source={{ uri: item.url }} 
+          source={{ uri: item.image_url }} 
           style={styles.foodImage}
           resizeMode="cover"
           showLoadingIndicator={true}
