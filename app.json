@@ -14,8 +14,7 @@
     "android": {
       "package": "com.dyhighschool.yumpickapp",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/images/icon.png"
       },
       "edgeToEdgeEnabled": true
     },
