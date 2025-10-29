@@ -3,35 +3,30 @@
 const fs = require('fs');
 const path = require('path');
 
-const appJsonPath = path.join(__dirname, '..', 'app.json');
+// 플래그 확인
+const skipBump = process.argv.includes('--skip-bump') || process.argv.includes('--no-bump');
 
-// app.json 읽기
-const appJson = JSON.parse(fs.readFileSync(appJsonPath, 'utf8'));
-
-// 현재 runtimeVersion 확인
-let currentRuntimeVersion;
-if (typeof appJson.expo.runtimeVersion === 'object') {
-  // policy 방식인 경우 1.0.0으로 시작
-  currentRuntimeVersion = '1.0.0';
-} else {
-  currentRuntimeVersion = appJson.expo.runtimeVersion || '1.0.0';
+if (skipBump) {
+  console.log('⏭️  Skipping version bump (--skip-bump flag detected)');
+  process.exit(0);
 }
 
-// runtimeVersion 증가 (patch 버전 증가)
-const runtimeParts = currentRuntimeVersion.split('.').map(Number);
-runtimeParts[2] = (runtimeParts[2] || 0) + 1;
-const newRuntimeVersion = runtimeParts.join('.');
+const versionFilePath = path.join(__dirname, '..', 'constants', 'version.ts');
 
-// version을 runtimeVersion에 맞춰 .0으로 초기화
-const newAppVersion = `${newRuntimeVersion}.0`;
+// version.ts 읽기
+const versionFileContent = fs.readFileSync(versionFilePath, 'utf8');
 
-// 업데이트
-appJson.expo.runtimeVersion = newRuntimeVersion;
-appJson.expo.version = newAppVersion;
+// 현재 BUILD_NUMBER 추출
+const buildNumberMatch = versionFileContent.match(/export const BUILD_NUMBER = (\d+);/);
+const currentBuildNumber = buildNumberMatch ? parseInt(buildNumberMatch[1]) : 0;
+const newBuildNumber = currentBuildNumber + 1;
 
-// app.json 저장
-fs.writeFileSync(appJsonPath, JSON.stringify(appJson, null, 2) + '\n');
+// version.ts 업데이트
+const newContent = versionFileContent.replace(
+  /export const BUILD_NUMBER = \d+;/,
+  `export const BUILD_NUMBER = ${newBuildNumber};`
+);
 
-console.log(`✅ Build version updated:`);
-console.log(`   Runtime version: ${currentRuntimeVersion} -> ${newRuntimeVersion}`);
-console.log(`   App version: ${appJson.expo.version || 'N/A'} -> ${newAppVersion}`);
+fs.writeFileSync(versionFilePath, newContent);
+
+console.log(`✅ Build number updated: ${currentBuildNumber} -> ${newBuildNumber}`);

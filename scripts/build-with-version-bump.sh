@@ -7,22 +7,35 @@ NC='\033[0m' # No Color
 
 echo -e "${BLUE}🚀 Starting EAS build process...${NC}"
 
-# 1. runtimeVersion 업데이트
-echo -e "${BLUE}📝 Updating runtime version...${NC}"
-node ./scripts/bump-runtime-version.js
+# 플래그 확인
+SKIP_BUMP=false
+for arg in "$@"; do
+  if [ "$arg" == "--skip-bump" ] || [ "$arg" == "--no-bump" ]; then
+    SKIP_BUMP=true
+    break
+  fi
+done
 
-if [ $? -ne 0 ]; then
-  echo "❌ Failed to update runtime version"
-  exit 1
-fi
+# 1. BUILD_NUMBER 업데이트
+if [ "$SKIP_BUMP" == "false" ]; then
+  echo -e "${BLUE}📝 Updating build number...${NC}"
+  node ./scripts/bump-runtime-version.js
 
-# 2. 변경사항을 git에 커밋 (선택사항)
-if git diff --quiet app.json; then
-  echo "No changes to app.json"
+  if [ $? -ne 0 ]; then
+    echo "❌ Failed to update build number"
+    exit 1
+  fi
+
+  # 2. 변경사항을 git에 커밋
+  if git diff --quiet constants/version.ts; then
+    echo "No changes to constants/version.ts"
+  else
+    echo -e "${BLUE}💾 Committing build number update...${NC}"
+    git add constants/version.ts
+    git commit -m "chore: bump build number for build"
+  fi
 else
-  echo -e "${BLUE}💾 Committing runtime version update...${NC}"
-  git add app.json
-  git commit -m "chore: bump runtime version for build"
+  echo -e "${BLUE}⏭️  Skipping build number bump${NC}"
 fi
 
 # 3. EAS 빌드 실행
