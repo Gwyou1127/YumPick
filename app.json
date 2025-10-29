@@ -9,12 +9,14 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "hs.dukyoung.yum-pick.app"
     },
     "android": {
       "package": "com.dyhighschool.yumpickapp",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/icon.png"
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#F5BC2D"
       },
       "edgeToEdgeEnabled": true
     },
