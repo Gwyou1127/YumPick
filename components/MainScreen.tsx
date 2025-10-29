@@ -7,8 +7,11 @@ import {
   TouchableOpacity
 } from 'react-native';
 import { router } from 'expo-router';
+import Constants from 'expo-constants';
 
 export const MainScreen: React.FC = () => {
+  const version = Constants.expoConfig?.version || '1.0.0';
+
   return (
     <View style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
@@ -32,6 +35,11 @@ export const MainScreen: React.FC = () => {
                 새로운 맛을 발견해보세요!
               </Text>
             </TouchableOpacity>
+          </View>
+
+          {/* 버전 정보 */}
+          <View style={styles.footer}>
+            <Text style={styles.versionText}>v{version}</Text>
           </View>
         </View>
       </SafeAreaView>
@@ -101,6 +109,18 @@ const styles = StyleSheet.create({
     color: '#7f8c8d',
     textAlign: 'center',
     lineHeight: 28,
+  },
+  footer: {
+    position: 'absolute',
+    bottom: 20,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+  },
+  versionText: {
+    fontSize: 12,
+    color: '#95a5a6',
+    fontWeight: '500',
   },
 });
 
