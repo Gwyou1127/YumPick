@@ -2,7 +2,7 @@
   "expo": {
     "name": "dy-yum-pick-app",
     "slug": "dy-yum-pick-app",
-    "version": "1.0.1.0",
+    "version": "1.0.2.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "dyyumpickapp",
@@ -49,7 +49,7 @@
       }
     },
     "owner": "dy-high-school",
-    "runtimeVersion": "1.0.1",
+    "runtimeVersion": "1.0.2",
     "updates": {
       "url": "https://u.expo.dev/ac733867-3f5e-4008-be7a-1a65898c599c"
     }
