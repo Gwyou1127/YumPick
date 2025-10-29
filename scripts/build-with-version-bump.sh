@@ -16,26 +16,26 @@ for arg in "$@"; do
   fi
 done
 
-# 1. BUILD_NUMBER 업데이트
+# 1. App version 업데이트 (patch 증가 + BUILD_NUMBER 리셋)
 if [ "$SKIP_BUMP" == "false" ]; then
-  echo -e "${BLUE}📝 Updating build number...${NC}"
-  node ./scripts/bump-runtime-version.js
+  echo -e "${BLUE}📝 Updating app version...${NC}"
+  node ./scripts/bump-app-version.js
 
   if [ $? -ne 0 ]; then
-    echo "❌ Failed to update build number"
+    echo "❌ Failed to update app version"
     exit 1
   fi
 
   # 2. 변경사항을 git에 커밋
-  if git diff --quiet constants/version.ts; then
-    echo "No changes to constants/version.ts"
+  if git diff --quiet app.json constants/version.ts; then
+    echo "No changes to version files"
   else
-    echo -e "${BLUE}💾 Committing build number update...${NC}"
-    git add constants/version.ts
-    git commit -m "chore: bump build number for build"
+    echo -e "${BLUE}💾 Committing version update...${NC}"
+    git add app.json constants/version.ts
+    git commit -m "chore: bump app version for store build"
   fi
 else
-  echo -e "${BLUE}⏭️  Skipping build number bump${NC}"
+  echo -e "${BLUE}⏭️  Skipping version bump${NC}"
 fi
 
 # 3. EAS 빌드 실행
