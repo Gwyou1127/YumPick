@@ -1,10 +1,10 @@
 import React from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
+import {
+  View,
+  Text,
+  StyleSheet,
   SafeAreaView,
-  TouchableOpacity 
+  TouchableOpacity
 } from 'react-native';
 import { router } from 'expo-router';
 
@@ -21,7 +21,7 @@ export const MainScreen: React.FC = () => {
 
           {/* 메인 콘텐츠 */}
           <View style={styles.mainContent}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.welcomeCard}
               onPress={() => router.push('/carousel')}
               activeOpacity={0.8}
