@@ -49,6 +49,9 @@
       }
     },
     "owner": "dy-high-school",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
     "updates": {
       "url": "https://u.expo.dev/ac733867-3f5e-4008-be7a-1a65898c599c"
     }
