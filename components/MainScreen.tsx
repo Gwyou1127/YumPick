@@ -8,9 +8,11 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import Constants from 'expo-constants';
+import { BUILD_NUMBER } from '@/constants/version';
 
 export const MainScreen: React.FC = () => {
   const version = Constants.expoConfig?.version || '1.0.0';
+  const fullVersion = `${version}.${BUILD_NUMBER}`;
 
   return (
     <View style={styles.container}>
@@ -39,7 +41,7 @@ export const MainScreen: React.FC = () => {
 
           {/* 버전 정보 */}
           <View style={styles.footer}>
-            <Text style={styles.versionText}>v{version}</Text>
+            <Text style={styles.versionText}>v{fullVersion}</Text>
           </View>
         </View>
       </SafeAreaView>
