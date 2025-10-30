@@ -1,14 +1,19 @@
 import React from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
+import {
+  View,
+  Text,
+  StyleSheet,
   SafeAreaView,
-  TouchableOpacity 
+  TouchableOpacity
 } from 'react-native';
 import { router } from 'expo-router';
+import Constants from 'expo-constants';
+import { BUILD_NUMBER } from '@/constants/version';
 
 export const MainScreen: React.FC = () => {
+  const version = Constants.expoConfig?.version || '1.0.0';
+  const fullVersion = `${version}.${BUILD_NUMBER}`;
+
   return (
     <View style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
@@ -21,7 +26,7 @@ export const MainScreen: React.FC = () => {
 
           {/* 메인 콘텐츠 */}
           <View style={styles.mainContent}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.welcomeCard}
               onPress={() => router.push('/carousel')}
               activeOpacity={0.8}
@@ -32,6 +37,11 @@ export const MainScreen: React.FC = () => {
                 새로운 맛을 발견해보세요!
               </Text>
             </TouchableOpacity>
+          </View>
+
+          {/* 버전 정보 */}
+          <View style={styles.footer}>
+            <Text style={styles.versionText}>v{fullVersion}</Text>
           </View>
         </View>
       </SafeAreaView>
@@ -101,6 +111,18 @@ const styles = StyleSheet.create({
     color: '#7f8c8d',
     textAlign: 'center',
     lineHeight: 28,
+  },
+  footer: {
+    position: 'absolute',
+    bottom: 20,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+  },
+  versionText: {
+    fontSize: 12,
+    color: '#95a5a6',
+    fontWeight: '500',
   },
 });
 
